@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+"""
+agent-sync CLI - Agent management tool for LAIS-agent-CoComm
+
+Usage:
+    agent-sync start --agent opencode
+    agent-sync status
+    agent-sync delegate --to opencode --task "fix bug"
+    agent-sync list
+    agent-sync dlq
+"""
+
+import argparse
+import sys
+import json
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from agent_sync import A2AServer, SharedMemory, ActiveSessionLog, start_a2a_server
+
+
+def cmd_start(args):
+    """Start the A2A server or a specific agent."""
+    if args.agent:
+        print(f"Starting agent: {args.agent}")
+        # In a full implementation, this would spawn the agent process
+        log = ActiveSessionLog()
+        session = log.create_session(
+            task_description=f"Started {args.agent}",
+            created_by="cli"
+        )
+        print(f"Session created: {session['session_id']}")
+    else:
+        print("Starting A2A server...")
+        server = start_a2a_server(port=args.port)
+        print(f"Server running at {server.url}")
+
+
+def cmd_status(args):
+    """Show system status."""
+    # Check A2A server
+    try:
+        import urllib.request
+        req = urllib.request.urlopen(f"http://localhost:{args.port}/status", timeout=2)
+        status = json.loads(req.read())
+        print("=== A2A Server Status ===")
+        print(json.dumps(status, indent=2))
+    except Exception as e:
+        print(f"A2A server not running: {e}")
+
+    # Check shared memory
+    try:
+        memory = SharedMemory()
+        sync_status = memory.get_sync_status()
+        print("\n=== Shared Memory Status ===")
+        print(json.dumps(sync_status, indent=2))
+    except Exception as e:
+        print(f"Shared memory error: {e}")
+
+    # Check active sessions
+    try:
+        log = ActiveSessionLog()
+        session = log.get_session()
+        print("\n=== Active Session ===")
+        if session:
+            print(json.dumps(session, indent=2))
+        else:
+            print("No active session")
+    except Exception as e:
+        print(f"Session log error: {e}")
+
+
+def cmd_delegate(args):
+    """Delegate a task to an agent."""
+    if not args.to or not args.task:
+        print("Error: --to and --task are required")
+        sys.exit(1)
+
+    try:
+        import urllib.request
+
+        payload = {
+            "from_agent": args.from_agent or "cli",
+            "to_agent": args.to,
+            "task_type": args.type or "generic",
+            "payload": {"description": args.task},
+            "priority": args.priority or "normal"
+        }
+
+        req = urllib.request.Request(
+            f"http://localhost:{args.port}/a2a/tasks",
+            data=json.dumps(payload).encode('utf-8'),
+            headers={"Content-Type": "application/json"}
+        )
+        response = urllib.request.urlopen(req)
+        result = json.loads(response.read())
+        print(f"Task delegated: {result.get('task_id')}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def cmd_list(args):
+    """List available agents."""
+    try:
+        import urllib.request
+        req = urllib.request.urlopen(f"http://localhost:{args.port}/a2a/agent-card", timeout=2)
+        card = json.loads(req.read())
+        print("=== Available Agents ===")
+        for agent in card.get("agents", []):
+            print(f"\n{agent.get('name')} ({agent.get('agent_id')})")
+            print(f"  {agent.get('description')}")
+            print(f"  Capabilities: {', '.join(agent.get('capabilities', []))}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def cmd_dlq(args):
+    """Show dead letter queue."""
+    try:
+        import urllib.request
+        req = urllib.request.urlopen(f"http://localhost:{args.port}/a2a/tasks?status=failed", timeout=2)
+        tasks = json.loads(req.read())
+        print("=== Dead Letter Queue (Failed Tasks) ===")
+        for task in tasks.get("tasks", []):
+            print(f"\nTask: {task.get('task_id')}")
+            print(f"  From: {task.get('from_agent')} -> To: {task.get('to_agent')}")
+            print(f"  Status: {task.get('status')}")
+            print(f"  Error: {task.get('error', 'N/A')}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="LAIS-agent-CoComm CLI - Agent coordination tool"
+    )
+    parser.add_argument("--port", "-p", default="8020", help="A2A server port")
+
+    subparsers = parser.add_subparsers(dest="command", help="Commands")
+
+    # start command
+    start_parser = subparsers.add_parser("start", help="Start A2A server or agent")
+    start_parser.add_argument("--agent", "-a", help="Agent ID to start")
+    start_parser.add_argument("--port", "-p", default="8020", help="Port for server")
+
+    # status command
+    status_parser = subparsers.add_parser("status", help="Show system status")
+
+    # delegate command
+    delegate_parser = subparsers.add_parser("delegate", help="Delegate task to agent")
+    delegate_parser.add_argument("--to", "-t", required=True, help="Target agent")
+    delegate_parser.add_argument("--task", "-T", required=True, help="Task description")
+    delegate_parser.add_argument("--from", "-f", default="cli", help="Source agent")
+    delegate_parser.add_argument("--type", default="generic", help="Task type")
+    delegate_parser.add_argument("--priority", default="normal", help="Priority")
+
+    # list command
+    list_parser = subparsers.add_parser("list", help="List available agents")
+
+    # dlq command
+    dlq_parser = subparsers.add_parser("dlq", help="Show dead letter queue")
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    # Route to command handlers
+    if args.command == "start":
+        cmd_start(args)
+    elif args.command == "status":
+        cmd_status(args)
+    elif args.command == "delegate":
+        cmd_delegate(args)
+    elif args.command == "list":
+        cmd_list(args)
+    elif args.command == "dlq":
+        cmd_dlq(args)
+
+
+if __name__ == "__main__":
+    main()
