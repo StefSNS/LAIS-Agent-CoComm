@@ -49,6 +49,21 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
         if path in ("/.well-known/agent-card", "/a2a/agent-card"):
             self._send_json(self._get_agent_card())
 
+        elif path == "/a2a/tasks/cleanup":
+            if not self.protocol:
+                self.send_response(500)
+                self.wfile.write(b'{"error": "Protocol not initialized"}')
+                return
+            hours = int(dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p).get("hours", "1"))
+            removed = self.protocol.cleanup_completed_tasks(hours)
+            self._send_json({"removed": removed, "message": f"Removed {removed} completed tasks older than {hours}h"})
+
+        elif path == "/a2a/tasks":
+            agent = dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p).get("agent")
+            status = dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p).get("status")
+            tasks = self.protocol.list_tasks(agent=agent, status=status) if self.protocol else []
+            self._send_json({"tasks": tasks})
+
         elif path.startswith("/a2a/tasks/"):
             task_id = path[len("/a2a/tasks/"):]
             if not task_id:
@@ -62,9 +77,28 @@ class A2ARequestHandler(BaseHTTPRequestHandler):
                 return
             self._send_json(task)
 
-        elif path == "/a2a/tasks":
-            tasks = self.protocol.list_tasks() if self.protocol else []
-            self._send_json({"tasks": tasks})
+        elif path == "/a2a/messages/cleanup":
+            if not self.protocol:
+                self.send_response(500)
+                self.wfile.write(b'{"error": "Protocol not initialized"}')
+                return
+            hours = int(dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p).get("hours", "24"))
+            removed = self.protocol.cleanup_messages(hours)
+            self._send_json({"removed": removed, "message": f"Removed {removed} expired messages"})
+
+        elif path == "/a2a/messages/clear":
+            if not self.protocol:
+                self.send_response(500)
+                self.wfile.write(b'{"error": "Protocol not initialized"}')
+                return
+            removed = self.protocol.clear_responded_messages()
+            self._send_json({"removed": removed, "message": f"Cleared {removed} stale messages"})
+
+        elif path == "/a2a/messages":
+            agent = dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p).get("agent")
+            unread_only = dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p).get("unread") == "true"
+            messages = self.protocol.get_messages(agent=agent, unread_only=unread_only) if self.protocol else []
+            self._send_json({"messages": messages, "count": len(messages)})
 
         elif path == "/status":
             status = self.protocol.get_status() if self.protocol else {}
@@ -263,6 +297,55 @@ class ProtocolLayer:
             self._messages.append(msg)
 
         return msg_id
+
+    def get_messages(self, agent: str = None, unread_only: bool = False) -> list:
+        """Get messages, optionally filtered by agent or unread status."""
+        messages = self._messages
+        if agent:
+            messages = [m for m in messages if m.to_agent == agent or m.from_agent == agent]
+        if unread_only:
+            messages = [m for m in messages if not m.read and not m.responded]
+        return [m.to_dict() for m in messages[-50:]]
+
+    def cleanup_completed_tasks(self, max_age_hours: int = 1) -> int:
+        """Remove completed tasks older than max_age_hours."""
+        from datetime import datetime
+        cutoff = datetime.now().timestamp() - (max_age_hours * 3600)
+        to_remove = []
+        for task in self._tasks:
+            if task.status not in ("completed", "failed"):
+                continue
+            try:
+                created = datetime.fromisoformat(task.created_at.replace("Z", "+00:00")).timestamp()
+                if created < cutoff:
+                    to_remove.append(task.task_id)
+            except Exception:
+                pass
+        for task_id in to_remove:
+            self._tasks = [t for t in self._tasks if t.task_id != task_id]
+        return len(to_remove)
+
+    def cleanup_messages(self, max_age_hours: int = 24) -> int:
+        """Remove messages older than max_age_hours."""
+        from datetime import datetime
+        cutoff = datetime.now().timestamp() - (max_age_hours * 3600)
+        to_remove = []
+        for msg in self._messages:
+            try:
+                ts = datetime.fromisoformat(msg.timestamp.replace("Z", "+00:00")).timestamp()
+                if ts < cutoff:
+                    to_remove.append(msg.msg_id)
+            except Exception:
+                pass
+        for msg_id in to_remove:
+            self._messages = [m for m in self._messages if m.msg_id != msg_id]
+        return len(to_remove)
+
+    def clear_responded_messages(self) -> int:
+        """Remove all messages with status 'responded' or 'read'."""
+        before = len(self._messages)
+        self._messages = [m for m in self._messages if not m.responded and not m.read]
+        return before - len(self._messages)
 
     def get_status(self) -> dict:
         return {
