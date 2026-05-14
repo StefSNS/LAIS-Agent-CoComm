@@ -3,7 +3,7 @@ LAIS-agent-CoComm - Agent-to-Agent Communication & Coordination
 A lightweight, standalone multi-agent coordination framework.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.5.0"
 __author__ = "Stefa"
 
 from .session_log import ActiveSessionLog, FileWatcher
@@ -18,6 +18,8 @@ from .goal_planner import TaskDAG, GoalDecomposer, create_goal_dag
 from .consensus import ConsensusEngine, ConsensusRoom, VoteStrategy, resolve_conflict
 from .graph_evolution import EvolvingGraph, GraphEvolutionEngine, NodeStatus
 from .trust import TrustManager, AgentReputation, create_trust_system, check_agent_trust
+from .mcp_bridge import MCPBridge, MCPTool, MCPServerConnection, create_mcp_bridge
+from .websocket_server import WebSocketServer, run_websocket_server
 
 __all__ = [
     # Core
@@ -65,4 +67,12 @@ __all__ = [
     "AgentReputation",
     "create_trust_system",
     "check_agent_trust",
+    # MCP Bridge
+    "MCPBridge",
+    "MCPTool",
+    "MCPServerConnection",
+    "create_mcp_bridge",
+    # WebSocket
+    "WebSocketServer",
+    "run_websocket_server",
 ]

@@ -10,6 +10,8 @@ A lightweight, standalone multi-agent coordination framework for AI systems. Ena
 | Feature | Description |
 |---------|-------------|
 | **A2A Server** | HTTP server for agent task delegation and messaging |
+| **MCP Bridge** | Model Context Protocol integration for external tools |
+| **WebSocket Server** | Real-time bidirectional agent communication |
 | **Shared Memory** | Cross-agent memory with priority levels and access tracking |
 | **FileWatcher** | Real-time file monitoring (watchdog) with polling fallback |
 | **Trigger System** | Event-driven triggers with typed callbacks |
@@ -27,7 +29,7 @@ pip install -e .
 ```
 
 ```python
-from agent_sync import ActiveSessionLog, SharedMemory, A2AServer
+from agent_sync import ActiveSessionLog, SharedMemory, A2AServer, MCPBridge
 
 # Start session monitoring
 log = ActiveSessionLog()
@@ -35,6 +37,10 @@ log = ActiveSessionLog()
 # Share memory with other agents
 memory = SharedMemory()
 memory.store("agent_a", "task_status", "processing", priority="high")
+
+# Connect MCP tools
+mcp = MCPBridge()
+mcp.add_server("github", "GitHub MCP", ["npx", "-y", "@modelcontextprotocol/server-github"])
 
 # Start A2A server
 server = A2AServer()
@@ -74,6 +80,8 @@ server.start()
 |---------|------|--------|-----------------|-----------|
 | Local-first | ✅ | ❌ | ✅ | ❌ |
 | A2A protocol | ✅ | ❌ | ❌ | ✅ |
+| MCP integration | ✅ | ❌ | ❌ | ✅ |
+| WebSocket support | ✅ | ❌ | ❌ | ❌ |
 | FileWatcher | ✅ | ❌ | ❌ | ❌ |
 | 4-tier memory | ✅ | ❌ | ❌ | ❌ |
 | Vault integration | ✅ | ❌ | ❌ | ❌ |
@@ -138,6 +146,22 @@ log = ActiveSessionLog(
 
 ---
 
+## WebSocket Server Example
+
+```python
+from agent_sync import WebSocketServer
+
+server = WebSocketServer(host="127.0.0.1", port=8765)
+
+async def main():
+    await server.start()
+    # Agents can now connect and communicate in real-time
+
+asyncio.run(main())
+```
+
+---
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -154,6 +178,7 @@ log = ActiveSessionLog(
 - Python 3.10+
 - watchdog (optional, for file watching)
 - aiosqlite (optional, for async SQLite)
+- asyncio (built-in)
 
 ---
 
