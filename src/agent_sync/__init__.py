@@ -3,7 +3,7 @@ LAIS-agent-CoComm - Agent-to-Agent Communication & Coordination
 A lightweight, standalone multi-agent coordination framework.
 """
 
-__version__ = "0.5.0"
+__version__ = "0.5.2"
 __author__ = "Stefa"
 
 from .session_log import ActiveSessionLog, FileWatcher
@@ -20,6 +20,7 @@ from .graph_evolution import EvolvingGraph, GraphEvolutionEngine, NodeStatus
 from .trust import TrustManager, AgentReputation, create_trust_system, check_agent_trust
 from .mcp_bridge import MCPBridge, MCPTool, MCPServerConnection, create_mcp_bridge
 from .websocket_server import WebSocketServer, run_websocket_server
+from .vault_sync import VaultIntegration, load_vault_context
 
 __all__ = [
     # Core
@@ -75,4 +76,7 @@ __all__ = [
     # WebSocket
     "WebSocketServer",
     "run_websocket_server",
+    # Vault Integration
+    "VaultIntegration",
+    "load_vault_context",
 ]
