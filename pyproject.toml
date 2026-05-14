@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lais-agent-cocomm"
+version = "0.1.0"
+description = "Local AI System - Agent-to-Agent Communication & Coordination"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Stefa", email = "stefa@example.com"}
+]
+keywords = ["ai", "agents", "multi-agent", "a2a", "coordination", "communication"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "watchdog>=2.0.0",
+]
+
+[project.optional-dependencies]
+async = ["aiosqlite>=0.19.0"]
+dev = ["pytest>=7.0", "black", "mypy"]
+
+[project.urls]
+Homepage = "https://github.com/stefa/lais-agent-cocomm"
+Repository = "https://github.com/stefa/lais-agent-cocomm"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["agent_sync*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
