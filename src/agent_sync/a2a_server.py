@@ -268,7 +268,6 @@ class ProtocolLayer:
 
         with self._lock:
             self._tasks.append(task)
-            # Auto-complete for demo (real impl would queue)
             task.complete()
 
         return task
@@ -299,7 +298,6 @@ class ProtocolLayer:
         return msg_id
 
     def get_messages(self, agent: str = None, unread_only: bool = False) -> list:
-        """Get messages, optionally filtered by agent or unread status."""
         messages = self._messages
         if agent:
             messages = [m for m in messages if m.to_agent == agent or m.from_agent == agent]
@@ -308,7 +306,6 @@ class ProtocolLayer:
         return [m.to_dict() for m in messages[-50:]]
 
     def cleanup_completed_tasks(self, max_age_hours: int = 1) -> int:
-        """Remove completed tasks older than max_age_hours."""
         from datetime import datetime
         cutoff = datetime.now().timestamp() - (max_age_hours * 3600)
         to_remove = []
@@ -326,7 +323,6 @@ class ProtocolLayer:
         return len(to_remove)
 
     def cleanup_messages(self, max_age_hours: int = 24) -> int:
-        """Remove messages older than max_age_hours."""
         from datetime import datetime
         cutoff = datetime.now().timestamp() - (max_age_hours * 3600)
         to_remove = []
@@ -342,7 +338,6 @@ class ProtocolLayer:
         return len(to_remove)
 
     def clear_responded_messages(self) -> int:
-        """Remove all messages with status 'responded' or 'read'."""
         before = len(self._messages)
         self._messages = [m for m in self._messages if not m.responded and not m.read]
         return before - len(self._messages)

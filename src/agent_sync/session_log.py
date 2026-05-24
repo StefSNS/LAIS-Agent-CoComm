@@ -165,7 +165,6 @@ class ActiveSessionLog:
 
         self._current_session = self.storage.read_json()
 
-        # Auto-start monitoring
         if os.environ.get("LAIS_AUTO_MONITOR", "true").lower() == "true":
             self._enable_monitoring()
 
@@ -195,7 +194,6 @@ class ActiveSessionLog:
         """Fallback polling for systems without watchdog."""
         def poll():
             while self._poll_running:
-                # Check for changes
                 time.sleep(float(os.environ.get("LAIS_POLL_INTERVAL", "10.0")))
         self._poll_running = True
         threading.Thread(target=poll, daemon=True).start()

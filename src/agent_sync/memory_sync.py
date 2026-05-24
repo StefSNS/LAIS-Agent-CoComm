@@ -89,7 +89,6 @@ class SharedMemory:
             }
             self._data["entries"].append(entry)
 
-        # Update agent activity
         if agent not in self._data["agents"]:
             self._data["agents"][agent] = {"first_seen": now, "last_active": now}
         self._data["agents"][agent]["last_active"] = now

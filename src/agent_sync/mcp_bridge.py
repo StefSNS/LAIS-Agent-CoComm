@@ -5,10 +5,9 @@ Bridges MCP servers and tools to the LAIS coordination framework.
 
 import json
 import subprocess
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 
 
 @dataclass
@@ -157,13 +156,11 @@ class MCPBridge:
         }
 
 
-# Convenience function
 def create_mcp_bridge() -> MCPBridge:
     """Create a new MCP bridge."""
     return MCPBridge()
 
 
-# Example MCP server configs
 MCP_SERVER_CONFIGS = {
     "filesystem": {
         "name": "Filesystem MCP",

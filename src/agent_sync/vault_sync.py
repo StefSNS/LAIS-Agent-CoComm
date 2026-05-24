@@ -17,7 +17,6 @@ class VaultIntegration:
         if vault_path:
             self.vault_path = Path(vault_path)
         else:
-            # Default to LAIS vault location
             self.vault_path = Path(os.environ.get(
                 "LAIS_VAULT_PATH",
                 "C:/Users/stefa/Desktop/AI projects/Obsidian/Unified Brain"
@@ -30,20 +29,17 @@ class VaultIntegration:
         """Load session context from vault."""
         context = {"memory": {}, "agents": {}, "projects": []}
 
-        # Load agent registry
         registry_path = self.vault_path / "40_System" / "agent_registry.md"
         if registry_path.exists():
             context["agents"] = self._parse_agent_registry(registry_path)
 
-        # Load crystallized memory
-        crystal_path = self.vault_path.parent / "Projects" / "models" / "ai_engine" / "knowledge" / "memory" / "crystallized.json"
+        crystal_path = self.vault_path / "50_Memory" / "crystallized.json"
         if crystal_path.exists():
             try:
                 context["memory"]["crystallized"] = json.loads(crystal_path.read_text())
             except Exception:
                 pass
 
-        # Load active projects
         projects_path = self.vault_path / "40_System" / "Project States.md"
         if projects_path.exists():
             context["projects"] = self._parse_project_states(projects_path)
@@ -99,7 +95,7 @@ class VaultIntegration:
             except Exception:
                 pass
 
-        return results[:10]  # Limit results
+        return results[:10]
 
     def write_note(self, relative_path: str, content: str):
         """Write a note to the vault."""
@@ -148,6 +144,5 @@ if __name__ == "__main__":
     print(f"Agents: {len(context.get('agents', {}))}")
     print(f"Projects: {len(context.get('projects', []))}")
 
-    # Test search
     results = vault.search("python")
     print(f"Search 'python': {len(results)} results")

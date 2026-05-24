@@ -52,7 +52,6 @@ class TriggerManager:
             type_callbacks = list(self._type_callbacks.get(event_type, []))
             type_callbacks.extend(self._type_callbacks.get("*", []))
 
-        # Log event
         event = {
             "timestamp": datetime.now().isoformat(),
             "source": source,
@@ -63,14 +62,12 @@ class TriggerManager:
         if len(self._event_history) > 100:
             self._event_history = self._event_history[-100:]
 
-        # Fire general callbacks
         for callback in all_callbacks:
             try:
                 callback(source, data)
             except Exception as e:
                 print(f"[TriggerManager] Callback error: {e}")
 
-        # Fire type-specific callbacks
         for callback in type_callbacks:
             try:
                 callback(source, data)

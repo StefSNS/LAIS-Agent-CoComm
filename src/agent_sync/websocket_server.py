@@ -156,7 +156,6 @@ class WebSocketServer:
         """Send message to specific agent."""
         for conn_id, conn in self.connections.items():
             if conn.agent_id == agent_id:
-                # In a real implementation, would send via the connection
                 logger.info(f"[WebSocket] Forwarding to {agent_id}")
                 break
 
