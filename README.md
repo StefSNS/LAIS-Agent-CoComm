@@ -1,191 +1,203 @@
-# LAIS-agent-CoComm
-### Local AI System - Agent-to-Agent Communication & Coordination
+> **⚠️ ARCHIVED — 2026-06-10**
+>
+> This repository is **outdated and no longer actively maintained**.
+>
+> **What changed:** LAIS has evolved substantially. The current system includes CSI-Fusion (WiFi sensing security system), Hermes Agent (multi-platform CLI with MCP), LAIS Desktop (Electron app), and a 4-agent architecture with production deployments. None of these are reflected here.
+>
+> **Why archived:** The public code no longer represents the actual system. This repo is preserved as a **historical reference only**.
+>
+> **Status:** Read-only. No further updates, issues, or PRs will be accepted.
+>
+> ---
 
-A lightweight, standalone multi-agent coordination framework for AI systems. Enables cross-agent task delegation, shared memory, real-time file watching, and structured communication without requiring cloud services.
+# LAIS-agent-CoComm
+### Local AI System - Age nt-to-Agent Communication & Coordination
+
+A l ightweight, standalone multi-agent coordinati on framework for AI systems. Enables cross-ag ent task delegation, shared memory, real-time  file watching, and structured communication  without requiring cloud services.
 
 ---
 
-## Features
+## Fe atures
 
 | Feature | Description |
-|---------|-------------|
-| **A2A Server** | HTTP server for agent task delegation and messaging |
-| **MCP Bridge** | Model Context Protocol integration for external tools |
-| **WebSocket Server** | Real-time bidirectional agent communication |
-| **Shared Memory** | Cross-agent memory with priority levels and access tracking |
-| **FileWatcher** | Real-time file monitoring (watchdog) with polling fallback |
-| **Trigger System** | Event-driven triggers with typed callbacks |
-| **4-Tier Memory** | Hot/Warm/Cold/Crystallized memory architecture |
-| **Session Persistence** | Cross-session continuity with SQLite + JSON |
-| **Cross-Terminal** | Works across multiple terminals via shared files |
-| **Local-First** | No cloud dependency, runs on any machine |
+|---------| -------------|
+| **A2A Server** | HTTP server  for agent task delegation and messaging |
+|  **MCP Bridge** | Model Context Protocol integ ration for external tools |
+| **WebSocket Ser ver** | Real-time bidirectional agent communi cation |
+| **Shared Memory** | Cross-agent me mory with priority levels and access tracking  |
+| **FileWatcher** | Real-time file monitor ing (watchdog) with polling fallback |
+| **Tr igger System** | Event-driven triggers with t yped callbacks |
+| **4-Tier Memory** | Hot/Wa rm/Cold/Crystallized memory architecture |
+|  **Session Persistence** | Cross-session conti nuity with SQLite + JSON |
+| **Cross-Terminal ** | Works across multiple terminals via shar ed files |
+| **Local-First** | No cloud depen dency, runs on any machine |
 
 ---
 
-## Quick Start
+## Quick S tart
 
 ```bash
 pip install -e .
 ```
 
-```python
-from agent_sync import ActiveSessionLog, SharedMemory, A2AServer, MCPBridge
+```python 
+from agent_sync import ActiveSessionLog, Sha redMemory, A2AServer, MCPBridge
 
-# Start session monitoring
+# Start sess ion monitoring
 log = ActiveSessionLog()
 
-# Share memory with other agents
-memory = SharedMemory()
-memory.store("agent_a", "task_status", "processing", priority="high")
+# Sh are memory with other agents
+memory = SharedM emory()
+memory.store("agent_a", "task_status" , "processing", priority="high")
 
-# Connect MCP tools
+# Connect M CP tools
 mcp = MCPBridge()
-mcp.add_server("github", "GitHub MCP", ["npx", "-y", "@modelcontextprotocol/server-github"])
+mcp.add_server("gi thub", "GitHub MCP", ["npx", "-y", "@modelcon textprotocol/server-github"])
 
-# Start A2A server
+# Start A2A se rver
 server = A2AServer()
 server.start()
 ```
-
+ 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    LAIS-agent-CoComm                        │
-├─────────────────────────────────────────────────────────────┤
-│  A2A Server (port 8020)                                    │
-│  ├── Task submission  /a2a/tasks                           │
-│  ├── Messaging         /a2a/message                         │
-│  └── Agent discovery   /a2a/agent-card                     │
-├─────────────────────────────────────────────────────────────┤
-│  Coordination Layer                                         │
-│  ├── ActiveSessionLog  - Session + task coordination       │
-│  ├── SharedMemory      - Cross-agent memory store          │
-│  ├── TriggerManager    - Event-driven callbacks            │
-│  └── FileWatcher       - Real-time file change detection   │
-├─────────────────────────────────────────────────────────────┤
-│  Storage                                                    │
-│  ├── JSON files     - Active sessions, shared memory       │
-│  └── SQLite         - Archived sessions, long-term        │
-└─────────────────────────────────────────────────────────────┘
+┌───── ─────────────── ─────────────── ─────────────── ───────────┐
+│                     LAIS-agent-CoComm                         │
+├───────── ─────────────── ─────────────── ─────────────── ───────┤
+│  A2A Server (por t 8020)                                    � �
+│  ├── Task submission  /a2a/tasks                            │
+│  ├──  Messaging         /a2a/message                          │
+│  └── Agent discovery    /a2a/agent-card                     │
+├ ─────────────── ─────────────── ─────────────── ─────────────── ─┤
+│  Coordination Layer                                          │
+│  ├──  ActiveSessionLog  - Session + task coordinati on       │
+│  ├── SharedMemory       - Cross-agent memory store          │
+│   ├── TriggerManager    - Event-driven c allbacks            │
+│  └── FileWa tcher       - Real-time file change detection    │
+├───────────� �──────────────� �──────────────� �──────────────� �────┤
+│  Storage                                                     │
+│   ├── JSON files     - Active sessions, s hared memory       │
+│  └── SQLite          - Archived sessions, long-term         │
+└────────────� ��──────────────� ��──────────────� ��──────────────� ��───┘
 ```
 
 ---
 
-## Comparison with Similar Systems
+## Comparison with S imilar Systems
 
-| Feature | LAIS | crewAI | wshobson/agents | Agent-MCP |
-|---------|------|--------|-----------------|-----------|
-| Local-first | ✅ | ❌ | ✅ | ❌ |
-| A2A protocol | ✅ | ❌ | ❌ | ✅ |
-| MCP integration | ✅ | ❌ | ❌ | ✅ |
-| WebSocket support | ✅ | ❌ | ❌ | ❌ |
-| FileWatcher | ✅ | ❌ | ❌ | ❌ |
-| 4-tier memory | ✅ | ❌ | ❌ | ❌ |
-| Vault integration | ✅ | ❌ | ❌ | ❌ |
-| Cross-terminal | ✅ | ❌ | ❌ | ❌ |
-| Shared memory | ✅ | Partial | ❌ | ✅ |
+| Feature | LAIS | crewAI | w shobson/agents | Agent-MCP |
+|---------|----- -|--------|-----------------|-----------|
+| L ocal-first | ✅ | ❌ | ✅ | ❌ |
+| A2A pr otocol | ✅ | ❌ | ❌ | ✅ |
+| MCP integr ation | ✅ | ❌ | ❌ | ✅ |
+| WebSocket s upport | ✅ | ❌ | ❌ | ❌ |
+| FileWatche r | ✅ | ❌ | ❌ | ❌ |
+| 4-tier memory |  ✅ | ❌ | ❌ | ❌ |
+| Vault integration  | ✅ | ❌ | ❌ | ❌ |
+| Cross-terminal |  ✅ | ❌ | ❌ | ❌ |
+| Shared memory | ✅  | Partial | ❌ | ✅ |
 
 ---
 
-## Agent Communication Flow
+## Agent Commu nication Flow
 
 ```python
-# Agent A sends task to Agent B
+# Agent A sends task  to Agent B
 from agent_sync import A2AServer
-
+ 
 server = A2AServer()
 
-# Agent A submits task
+# Agent A submits task 
 server.protocol.delegate_task(
-    from_agent="agent_a",
+    from_agen t="agent_a",
     to_agent="agent_b", 
-    task_type="code",
-    payload={"description": "Fix bug in module X"},
+    tas k_type="code",
+    payload={"description": "F ix bug in module X"},
     priority="high"
 )
 
-# Agent B receives via polling or file watcher
+ # Agent B receives via polling or file watche r
 ```
 
 ---
 
 ## Shared Memory Example
 
-```python
+```pyth on
 from agent_sync import SharedMemory
 
-memory = SharedMemory()
+memor y = SharedMemory()
 
 # Store with priority
-memory.store("lais", "project_status", "Active development", priority="high")
+mem ory.store("lais", "project_status", "Active d evelopment", priority="high")
 
-# Retrieve with access tracking
-results = memory.retrieve("opencode", category="project")
+# Retrieve wit h access tracking
+results = memory.retrieve(" opencode", category="project")
 
-# Cross-agent search
-found = memory.cross_agent_search("development")
+# Cross-agent  search
+found = memory.cross_agent_search("de velopment")
 ```
 
 ---
 
-## File Watching for Cross-Terminal Sync
+## File Watching for Cr oss-Terminal Sync
 
 ```python
-from agent_sync import ActiveSessionLog
+from agent_sync  import ActiveSessionLog
 
-log = ActiveSessionLog(
-    shared_path="/shared/folder/active_sessions.json"
+log = ActiveSessionL og(
+    shared_path="/shared/folder/active_se ssions.json"
 )
 
-# Auto-starts FileWatcher (watchdog) or polling fallback
-# Remote changes are detected instantly
+# Auto-starts FileWatcher (wa tchdog) or polling fallback
+# Remote changes  are detected instantly
 ```
 
 ---
 
-## WebSocket Server Example
+## WebSocket  Server Example
 
 ```python
-from agent_sync import WebSocketServer
+from agent_sync im port WebSocketServer
 
-server = WebSocketServer(host="127.0.0.1", port=8765)
+server = WebSocketServe r(host="127.0.0.1", port=8765)
 
-async def main():
+async def mai n():
     await server.start()
-    # Agents can now connect and communicate in real-time
+    # Agents ca n now connect and communicate in real-time
 
-asyncio.run(main())
+a syncio.run(main())
 ```
 
 ---
 
-## Environment Variables
+## Environment V ariables
 
-| Variable | Default | Description |
+| Variable | Default | Description  |
 |----------|---------|-------------|
-| `LAIS_AUTO_MONITOR` | `true` | Auto-start file watching |
-| `LAIS_POLL_INTERVAL` | `10.0` | Polling interval (seconds) |
-| `LAIS_SHARED_SESSION_PATH` | — | Cross-terminal session file |
-| `LAIS_AGENT_ID` | `opencode` | Agent identifier |
+| `LAI S_AUTO_MONITOR` | `true` | Auto-start file wa tching |
+| `LAIS_POLL_INTERVAL` | `10.0` | Po lling interval (seconds) |
+| `LAIS_SHARED_SES SION_PATH` | — | Cross-terminal session fil e |
+| `LAIS_AGENT_ID` | `opencode` | Agent id entifier |
 
 ---
 
 ## Requirements
 
-- Python 3.10+
+- Python 3. 10+
 - watchdog (optional, for file watching)
-- aiosqlite (optional, for async SQLite)
-- asyncio (built-in)
+ - aiosqlite (optional, for async SQLite)
+- as yncio (built-in)
 
 ---
 
 ## License
 
-MIT License - Free for personal and commercial use.
+MIT Licens e - Free for personal and commercial use.
 
----
+-- -
 
-Built for the [[LAIS]] multi-agent system by Stefa.
+Built for the [[LAIS]] multi-agent system  by Stefa. 
